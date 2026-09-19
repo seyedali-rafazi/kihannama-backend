@@ -30,4 +30,6 @@ class LauncherResponse(LauncherBase):
 
 class LauncherListResponse(BaseModel):
     total: int
+    page: int = 1
+    limit: int = 12
     launchers: List[LauncherResponse]

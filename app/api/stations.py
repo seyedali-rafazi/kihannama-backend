@@ -1,7 +1,7 @@
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, func, or_
 from ..database import get_db
 from ..models.station import SpaceStation, GroundStation
 from ..schemas.station import (
@@ -20,9 +20,13 @@ async def list_space_stations(
     group: Optional[str] = Query(None, description="Filter by group (ISS, Tiangong)"),
     type: Optional[str] = Query(None, description="Filter by type (coreModule, labModule, crewCraft, cargoCraft)"),
     search: Optional[str] = Query(None, description="Search by name or operator"),
+    sort: Optional[str] = Query(None, description="Sort order: nameAsc, nameDesc, yearAsc, yearDesc, metricAsc, metricDesc"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(12, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
     query = select(SpaceStation)
+    count_query = select(func.count(SpaceStation.id))
     filters = []
 
     if group:
@@ -40,13 +44,34 @@ async def list_space_stations(
 
     if filters:
         query = query.where(*filters)
+        count_query = count_query.where(*filters)
 
-    query = query.order_by(SpaceStation.id.asc())
+    total_res = await db.execute(count_query)
+    total = total_res.scalar() or 0
+
+    if sort == "nameAsc":
+        query = query.order_by(SpaceStation.object_name.asc())
+    elif sort == "nameDesc":
+        query = query.order_by(SpaceStation.object_name.desc())
+    elif sort == "yearAsc":
+        query = query.order_by(SpaceStation.year.asc())
+    elif sort == "yearDesc":
+        query = query.order_by(SpaceStation.year.desc())
+    elif sort == "metricAsc":
+        query = query.order_by(SpaceStation.altitude.asc())
+    elif sort == "metricDesc":
+        query = query.order_by(SpaceStation.altitude.desc())
+    else:
+        query = query.order_by(SpaceStation.id.asc())
+
+    query = query.offset((page - 1) * limit).limit(limit)
     result = await db.execute(query)
     stations = result.scalars().all()
 
     return {
-        "total": len(stations),
+        "total": total,
+        "page": page,
+        "limit": limit,
         "stations": stations
     }
 
@@ -106,9 +131,12 @@ async def list_ground_stations(
     region: Optional[str] = Query(None, description="Filter by region (americas, europe, asia, middleEast)"),
     search: Optional[str] = Query(None, description="Search by name, operator, or description"),
     sort: Optional[str] = Query(None, description="Sort order: nameAsc, nameDesc, yearAsc, yearDesc, metricAsc, metricDesc"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(12, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
     query = select(GroundStation)
+    count_query = select(func.count(GroundStation.id))
     filters = []
 
     if category and category != "all":
@@ -129,6 +157,10 @@ async def list_ground_stations(
 
     if filters:
         query = query.where(*filters)
+        count_query = count_query.where(*filters)
+
+    total_res = await db.execute(count_query)
+    total = total_res.scalar() or 0
 
     if sort == "nameAsc":
         query = query.order_by(GroundStation.name.asc())
@@ -145,11 +177,14 @@ async def list_ground_stations(
     else:
         query = query.order_by(GroundStation.sort_metric.desc())
 
+    query = query.offset((page - 1) * limit).limit(limit)
     result = await db.execute(query)
     stations = result.scalars().all()
 
     return {
-        "total": len(stations),
+        "total": total,
+        "page": page,
+        "limit": limit,
         "stations": stations
     }
 

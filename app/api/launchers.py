@@ -1,7 +1,7 @@
 from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, func, or_
 from ..database import get_db
 from ..models.launcher import Launcher
 from ..schemas.launcher import LauncherResponse, LauncherListResponse
@@ -14,9 +14,12 @@ async def list_launchers(
     status: Optional[str] = Query(None, description="Filter by status (active, legacy, developmental)"),
     search: Optional[str] = Query(None, description="Search by name, operator, or description"),
     sort: Optional[str] = Query(None, description="Sort order: nameAsc, nameDesc, yearAsc, yearDesc, metricAsc, metricDesc"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(12, ge=1, le=100),
     db: AsyncSession = Depends(get_db)
 ):
     query = select(Launcher)
+    count_query = select(func.count(Launcher.id))
     filters = []
 
     if category and category != "all":
@@ -37,6 +40,10 @@ async def list_launchers(
 
     if filters:
         query = query.where(*filters)
+        count_query = count_query.where(*filters)
+
+    total_res = await db.execute(count_query)
+    total = total_res.scalar() or 0
 
     # Sort
     if sort == "nameAsc":
@@ -54,11 +61,14 @@ async def list_launchers(
     else:
         query = query.order_by(Launcher.sort_metric.desc())
 
+    query = query.offset((page - 1) * limit).limit(limit)
     result = await db.execute(query)
     launchers = result.scalars().all()
 
     return {
-        "total": len(launchers),
+        "total": total,
+        "page": page,
+        "limit": limit,
         "launchers": launchers
     }
 

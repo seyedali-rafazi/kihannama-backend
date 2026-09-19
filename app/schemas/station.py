@@ -41,6 +41,8 @@ class SpaceStationResponse(SpaceStationBase):
 
 class SpaceStationListResponse(BaseModel):
     total: int
+    page: int = 1
+    limit: int = 12
     stations: List[SpaceStationResponse]
 
 
@@ -75,5 +77,7 @@ class GroundStationResponse(GroundStationBase):
 
 class GroundStationListResponse(BaseModel):
     total: int
+    page: int = 1
+    limit: int = 12
     stations: List[GroundStationResponse]
 

@@ -14,6 +14,7 @@ async def list_satellites(
     search: Optional[str] = Query(None, description="Search by name or NORAD ID"),
     orbit_class: Optional[str] = Query(None, description="Filter by LEO, MEO, GEO, HEO"),
     category: Optional[str] = Query(None, description="Filter by category"),
+    sort: Optional[str] = Query(None, description="Sort order: nameAsc, nameDesc, altitudeAsc, altitudeDesc, periodAsc, periodDesc"),
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db)
@@ -37,7 +38,22 @@ async def list_satellites(
     total_res = await db.execute(count_query)
     total = total_res.scalar() or 0
 
-    query = query.order_by(Satellite.id.asc()).offset((page - 1) * limit).limit(limit)
+    if sort == "nameAsc":
+        query = query.order_by(Satellite.name.asc())
+    elif sort == "nameDesc":
+        query = query.order_by(Satellite.name.desc())
+    elif sort == "altitudeAsc":
+        query = query.order_by(Satellite.altitude.asc())
+    elif sort == "altitudeDesc":
+        query = query.order_by(Satellite.altitude.desc())
+    elif sort == "periodAsc":
+        query = query.order_by(Satellite.period.asc())
+    elif sort == "periodDesc":
+        query = query.order_by(Satellite.period.desc())
+    else:
+        query = query.order_by(Satellite.id.asc())
+
+    query = query.offset((page - 1) * limit).limit(limit)
     result = await db.execute(query)
     satellites = result.scalars().all()
 
