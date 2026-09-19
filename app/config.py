@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     PORT: int = 8000
     HOST: str = "0.0.0.0"
-    CORS_ORIGINS: Union[List[str], str] = ["http://localhost:5173", "http://127.0.0.1:5173", "https://kihannama.ir"]
+    CORS_ORIGINS: Union[List[str], str] = ["http://localhost:5173", "http://127.0.0.1:5173", "https://kihannama.ir", "https://www.kihannama.ir"]
 
     ACTIVE_SATELLITE_PATH: str = "data/active-satellite.txt"
     STATION_OPS_PATH: str = "data/station-ops.csv"
