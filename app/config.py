@@ -14,7 +14,7 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    DATABASE_URL: str = "postgresql://neondb_owner:npg_4hyIZ7cPjHJB@ep-green-wave-b4buwph9-pooler.c-6.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require"
+    DATABASE_URL: str = ""
     DATABASE_URL_UNPOOLED: str = ""
     
     MONGODB_URL: str = "mongodb://localhost:27017"
