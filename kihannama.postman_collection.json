@@ -1,0 +1,621 @@
+{
+  "info": {
+    "_postman_id": "6447c299-6cbf-400b-ad4e-bdebf47692d7",
+    "name": "KihanNama API (کیهان‌نما)",
+    "description": "Complete API collection for KihanNama space tracking, satellite catalog, space/ground stations, launchers, and Cesium CZML orbital endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string",
+      "description": "Base URL for KihanNama API server"
+    },
+    {
+      "key": "noradId",
+      "value": "25544",
+      "type": "string",
+      "description": "Sample NORAD Catalog ID (e.g. 25544 for ISS)"
+    },
+    {
+      "key": "stationSlug",
+      "value": "iss",
+      "type": "string",
+      "description": "Sample Space Station slug or identifier"
+    },
+    {
+      "key": "groundStationId",
+      "value": "goldstone",
+      "type": "string",
+      "description": "Sample Ground Station identifier"
+    },
+    {
+      "key": "launcherId",
+      "value": "falcon-9",
+      "type": "string",
+      "description": "Sample Launcher identifier"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. General & Health",
+      "description": "Root information and service health check endpoints",
+      "item": [
+        {
+          "name": "Root Welcome & Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                ""
+              ]
+            },
+            "description": "Get welcome message, version, and documentation links."
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check & DB Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Checks PostgreSQL and MongoDB connectivity and returns live counts of satellites, space stations, ground stations, and launchers."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Satellites",
+      "description": "Satellite queries, catalog search, details, and Cesium CZML payloads",
+      "item": [
+        {
+          "name": "List Satellites (Paginated & Filtered)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/satellites?search=STARLINK&orbit_class=LEO&page=1&limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "satellites"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "STARLINK",
+                  "description": "Search query for satellite name or NORAD ID"
+                },
+                {
+                  "key": "orbit_class",
+                  "value": "LEO",
+                  "description": "Orbit classification: LEO, MEO, GEO, HEO"
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Satellite category"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (starts from 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Number of items per page (1 to 500)"
+                }
+              ]
+            },
+            "description": "Retrieve paginated list of satellites with optional filters."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Satellite by NORAD ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/satellites/{{noradId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "satellites",
+                "{{noradId}}"
+              ]
+            },
+            "description": "Get detailed metadata, orbital parameters, and classification for a satellite by NORAD ID (e.g. 25544)."
+          },
+          "response": []
+        },
+        {
+          "name": "Satellites CZML Stream (Batch)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/satellites/czml?limit=25&orbit_class=LEO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "satellites",
+                "czml"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "25",
+                  "description": "Max satellites to include in CZML (1 to 250)"
+                },
+                {
+                  "key": "orbit_class",
+                  "value": "LEO",
+                  "description": "Filter by LEO, MEO, GEO"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by satellite name"
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by category"
+                },
+                {
+                  "key": "norad_ids",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Comma-separated NORAD IDs"
+                }
+              ]
+            },
+            "description": "Generates Cesium-compatible CZML document packets for visualizing satellite orbits."
+          },
+          "response": []
+        },
+        {
+          "name": "Single Satellite CZML Orbit",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/satellites/{{noradId}}/czml",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "satellites",
+                "{{noradId}}",
+                "czml"
+              ]
+            },
+            "description": "Generates CZML orbit packet for a specific satellite NORAD ID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Space Stations",
+      "description": "Space stations, core modules, crew crafts, and orbital CZML trajectories",
+      "item": [
+        {
+          "name": "List Space Stations & Modules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stations/space?group=ISS",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "stations",
+                "space"
+              ],
+              "query": [
+                {
+                  "key": "group",
+                  "value": "ISS",
+                  "description": "Filter by group (ISS, Tiangong)"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filter by type: coreModule, labModule, crewCraft, cargoCraft"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Search name or operator"
+                }
+              ]
+            },
+            "description": "Retrieve all space station modules, docking ships, and habitats."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Space Station by Identifier",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stations/space/{{stationSlug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "stations",
+                "space",
+                "{{stationSlug}}"
+              ]
+            },
+            "description": "Get single space station details by slug, NORAD ID, or name (e.g. iss, tiangong)."
+          },
+          "response": []
+        },
+        {
+          "name": "Space Station CZML Orbit",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stations/space/{{stationSlug}}/czml",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "stations",
+                "space",
+                "{{stationSlug}}",
+                "czml"
+              ]
+            },
+            "description": "Generates CZML trajectory packets for a space station."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Ground Stations",
+      "description": "Worldwide tracking antennas, launch facilities, deep space network complexes",
+      "item": [
+        {
+          "name": "List Ground Stations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stations/ground?category=tracking&region=americas&sort=metricDesc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "stations",
+                "ground"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "tracking",
+                  "description": "Filter by category: tracking, communications, launch, research"
+                },
+                {
+                  "key": "region",
+                  "value": "americas",
+                  "description": "Filter by region: americas, europe, asia, middleEast"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Search by name, operator, or description"
+                },
+                {
+                  "key": "sort",
+                  "value": "metricDesc",
+                  "description": "Sort order: nameAsc, nameDesc, yearAsc, yearDesc, metricAsc, metricDesc"
+                }
+              ]
+            },
+            "description": "List ground stations with geographic and category filters."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ground Station by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stations/ground/{{groundStationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "stations",
+                "ground",
+                "{{groundStationId}}"
+              ]
+            },
+            "description": "Get single ground station metadata, coordinates, capabilities, and antenna specs."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Launchers & Rockets",
+      "description": "Space launch vehicles, rockets, reusable stages, and propulsion systems",
+      "item": [
+        {
+          "name": "List Launchers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/launchers?category=reusable&status=active&sort=metricDesc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "launchers"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "reusable",
+                  "description": "Filter by category: heavyLift, mediumLift, smallLift, reusable"
+                },
+                {
+                  "key": "status",
+                  "value": "active",
+                  "description": "Filter by status: active, legacy, developmental"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Search by name, operator, or description"
+                },
+                {
+                  "key": "sort",
+                  "value": "metricDesc",
+                  "description": "Sort order: nameAsc, nameDesc, yearAsc, yearDesc, metricAsc, metricDesc"
+                }
+              ]
+            },
+            "description": "List launch vehicles with technical specs, payload capacity, and status filters."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Launcher by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/launchers/{{launcherId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "launchers",
+                "{{launcherId}}"
+              ]
+            },
+            "description": "Get comprehensive rocket data, payload to LEO/GTO, operator details, and abilities."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. CZML Engine",
+      "description": "Cesium 3D orbital visualization datasets and custom TLE to CZML converter",
+      "item": [
+        {
+          "name": "Active Satellites CZML Feed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/czml/active?limit=50&orbit_class=LEO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "czml",
+                "active"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50",
+                  "description": "Number of satellites (1-200)"
+                },
+                {
+                  "key": "orbit_class",
+                  "value": "LEO",
+                  "description": "Orbit classification (LEO, MEO, GEO)"
+                }
+              ]
+            },
+            "description": "Returns CZML array containing document packet and orbital clock packets for active satellites."
+          },
+          "response": []
+        },
+        {
+          "name": "Space Stations CZML Feed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/czml/space-stations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "czml",
+                "space-stations"
+              ]
+            },
+            "description": "Returns CZML orbit visualization dataset for ISS and Tiangong station modules."
+          },
+          "response": []
+        },
+        {
+          "name": "Convert TLE to CZML (POST)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "ISS (ZARYA)\n1 25544U 98067A   23270.51950347  .00016717  00000-0  10270-3 0  9002\n2 25544  51.6420 181.7156 0004928 132.8423 227.3195 15.49815967417578"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/czml/from-tle",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "czml",
+                "from-tle"
+              ]
+            },
+            "description": "Converts raw 2-line or 3-line TLE string into a complete Cesium CZML document with orbital parameters."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
